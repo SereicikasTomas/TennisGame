@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="description" content="My first game">
+    <title>Simple game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script type="text/javascript">
+    var canvas;
+    var canvasContext;
+    var ballX = 50;
+    var ballSpeedX = 10;
+    var ballY = 50;
+    var ballSpeedY = 4;
+    var paddle1Y = 250;
+    var paddle2Y = 250;
+    var paddleHeight = 100;
+    var paddleWidth = 10;
+    var playerScore = 0;
+    var computerScore = 0;
+
+    // Function for everytime mouse moves and returns mouse coordinates.
+    function calculateMousePosition(evt){
+      var rect = canvas.getBoundingClientRect();
+      var root = document.documentElement;
+      // Taking position of mouse within the playable space.
+      var mouseX = evt.clientX - rect.left - root.scrollLeft;
+      var mouseY= evt.clientY - rect.top - root.scrollTop;
+      return {
+        x:mouseX,
+        y:mouseY
+      }
+    }
+
+      window.onload = function(){
+        canvas = document.getElementById('gameCanvas');
+        canvasContext = canvas.getContext('2d');
+
+        // First we call our function and secondly we set how long we want to wait to load it
+        // Inline function, because i dont want to maintain it separately
+        var framesPerSecond = 30;
+        setInterval(function() {
+          moveEverything();
+          drawEverything();
+        }, 1000/framesPerSecond);
+
+
+        // Event to update the Y coordinate
+        canvas.addEventListener('mousemove',
+          function(evt) {
+            var mousePos = calculateMousePosition(evt);
+            // to control the paddle from the centre we subtract the height by 2
+            paddle1Y = mousePos.y-(paddleHeight/2);
+        });
+
+      }
+
+      // resets balls position if it hits the left wall
+      function ballReset() {
+        ballSpeedX = -ballSpeedX;
+        ballX = canvas.width/2;
+        ballY = canvas.height/2;
+      }
+
+      // computers AI
+      function computerMovement() {
+        // to find paddle centre we subtract the height by 2
+        var paddle2YCenter = paddle2Y+(paddleHeight/2);
+        if (paddle2YCenter < ballY-35) {
+          paddle2Y += 6;
+        } else if (paddle2YCenter < ballY+35) {
+          paddle2Y -= 6;
+        }
+      }
+
+      // this function makes the ball move and bounce of the walls
+      function moveEverything() {
+        computerMovement();
+
+        ballX += ballSpeedX;
+        ballY -= ballSpeedY;
+        // Two minuses make one plus so speed changes from negative to positive
+        if(ballX < 0) {
+          // if the ball is bellow the top of the paddle and above the bottom+height of the paddle it will go the other way.
+          if(ballY > paddle1Y && ballY < paddle1Y+paddleHeight){
+            ballSpeedX = -ballSpeedX;
+          } else {
+            ballReset();
+            computerScore++;
+          }
+        }
+        if(ballX > canvas.width) {
+          if(ballY > paddle2Y && ballY < paddle2Y+paddleHeight){
+            ballSpeedX = -ballSpeedX;
+          } else {
+            ballReset();
+            playerScore++;
+          }
+        }
+        if(ballY < 0) {
+          ballSpeedY = -ballSpeedY;
+        }
+        if(ballY > canvas.height) {
+          ballSpeedY = -ballSpeedY;
+        }
+      }
+
+      function drawEverything() {
+        // this line manages canvas
+        colorRect(0, 0, canvas.width, canvas.height, 'black');
+
+        // this line manages the player paddle
+        colorRect(0,paddle1Y,paddleWidth,paddleHeight, 'white');
+
+        // this line manages the computer paddle
+        colorRect(canvas.width-paddleWidth,paddle2Y,paddleWidth,paddleHeight, 'white');
+
+        // this line draws the ball figure
+        colorCircle(ballX, ballY, 10, 'white');
+
+        // these lines show the scores
+        canvasContext.fillText(playerScore, 100, 100);
+        canvasContext.fillText(computerScore, 700, 100);
+      }
+
+      // this function manages the ball figure
+      function colorCircle(centerX, centerY, radius, drawColor) {
+        canvasContext.fillStyle = drawColor;
+        // this is how we call the ball
+        canvasContext.beginPath();
+        // This is meant to fill in a core of the circle. First two arguments are X and Y position, but here these coordinates are the center of the circle. Third argument is the radius of the circle. Fourth and fifth are radians, 2PI(Math.PI = 3.14...) is full circle. Last argument (true/false) shows which side to show, if it was a half of circle it would show one or another side.
+        canvasContext.arc(centerX, centerY, radius, 0,Math.PI*2, true);
+        // there is no fill arc as fillRect so we have to daclare them separately. This is how we fill the ball
+        canvasContext.fill();
+      }
+
+      // Function to color and position shapes
+      function colorRect(leftX, topY, width, height, drawColor) {
+        // What color we are going to fill the box
+        canvasContext.fillStyle = drawColor;
+        // First number the position from the left, second position from top, third width, fourth height
+        canvasContext.fillRect(leftX, topY, width, height);
+      }
+
+    </script>
+  </body>
+</html>
